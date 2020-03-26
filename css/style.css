@@ -17,3 +17,21 @@
     font-size: 1.5em;
     font-weight: bold;
 }
+h1{
+    font-family: 'Merriweather Sans', sans-serif;
+    text-align: center;
+}
+.states {
+    fill:#353333;
+    stroke: #CCC;
+    stroke-width: 2px;
+}
+
+.community{
+    fill:#C2A5CF;
+    stroke: #000000;
+    stroke-width: 1px
+}
+.LakeMichigan{
+    fill:#C9D3D4; 
+}
