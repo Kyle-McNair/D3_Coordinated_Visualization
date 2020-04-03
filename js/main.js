@@ -82,8 +82,41 @@ function setMap(){
         //create the color scale
         var colorScale = makeColorScale(csvData);
 
-        setEnumerationUnits(chicagoNeighborhoods, map, path);
+        setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale);
         };
+};
+
+function makeColorScale(data){
+    var colorClasses = [
+        "#edf8e9",
+        "#bae4b3",
+        "#74c476",
+        "#31a354",
+        "#006d2c"];
+    //create color scale generator
+    var colorScale = d3.scaleThreshold()
+        .range(colorClasses);
+
+    //build array of all values of the expressed attribute
+    var domainArray = [];
+    for (var i=0; i<data.length; i++){
+        var val = parseFloat(data[i][expressed]);
+        domainArray.push(val);
+    };
+
+    //cluster data using ckmeans clustering algorithm to create natural breaks
+    var clusters = ss.ckmeans(domainArray, 5);
+    //reset domain array to cluster minimums
+    domainArray = clusters.map(function(d){
+        return d3.min(d);
+    });
+    //remove first value from domain array to create class breakpoints
+    domainArray.shift();
+
+    //assign array of last 4 cluster minimums as domain
+    colorScale.domain(domainArray);
+
+    return colorScale;
 };
 
 function joinData(chicagoNeighborhoods, csvData){
@@ -111,8 +144,7 @@ function joinData(chicagoNeighborhoods, csvData){
     return chicagoNeighborhoods;
 };
 
-function setEnumerationUnits(chicagoNeighborhoods, map, path){
-    console.log(chicagoNeighborhoods)
+function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
     //.community is different as the map will select all from the chicagoNeighborhoods data and then brings it in.
     var chi = map.selectAll(".community")
         .data(chicagoNeighborhoods)
@@ -122,5 +154,14 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path){
         .attr("class", function(d){
             return "community " + d.properties.Neighborho;
                 })
-        .attr("d", path);
-}
+        .attr("d", path)
+        .style("fill", function(d){
+            var value = d.properties[expressed];
+            if(value){
+                return colorScale(d.properties[expressed]);
+            } else{
+                return "#ccc"
+            }
+        });
+};
+
