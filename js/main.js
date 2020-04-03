@@ -14,7 +14,7 @@ window.onload = setMap();
 function setMap(){
 
     //map frame dimensions
-    var width = 800,
+    var width = window.innerWidth*0.5,
         height = 800;
 
     //create new svg container for the map
@@ -26,10 +26,10 @@ function setMap(){
 
     //create Albers equal area conic projection centered on Chicago
     var projection = d3.geoAlbers()
-        .center([0, 41.83])
+        .center([-0.05, 41.83])
         .rotate([87.65, 0, 0])
         .parallels([40, 45])
-        .scale(95000.00)//extra zoom since this is a large scale map
+        .scale(110000.00)//extra zoom since this is a large scale map
         .translate([width / 2, height / 2]);
     //call in the projection
     var path = d3.geoPath()
@@ -83,6 +83,9 @@ function setMap(){
         var colorScale = makeColorScale(csvData);
 
         setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale);
+
+        //add coordinated visualization to the map
+        setChart(csvData, colorScale);
         };
 };
 
@@ -165,3 +168,73 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
         });
 };
 
+function setChart(csvData, colorScale){
+    //chart frame dimensions
+    var chartWidth = window.innerWidth * 0.45,
+        chartHeight = 600;
+
+    var chart = d3.select("body")
+        .append("svg")
+        .attr("width", chartWidth)
+        .attr("height", chartHeight)
+        .attr("class", "chart");
+
+    var yScale = d3.scaleLinear()
+        .range([0, chartHeight])
+        .domain([0, 25000]);
+
+    var bars = chart.selectAll(".bars")
+        .data(csvData)
+        .enter()
+        .append("rect")
+        .sort(function(a, b){
+            return b[expressed] - a[expressed]
+        })
+        .attr("class", function(d){
+            return "bars " + d.Neighborho;
+        })
+        .attr("width", chartWidth / csvData.length - 1)
+        .attr("x", function(d, i){
+            return i * (chartWidth / csvData.length);
+        })
+        .attr("height", function(d){
+            return yScale(parseFloat(d[expressed]));
+        })
+        .attr("y", function(d){
+            return chartHeight - yScale(parseFloat(d[expressed]))
+        })
+        .style("fill", function(d){
+                return colorScale(d[expressed]);
+        });
+        
+        
+
+    // var numbers = chart.selectAll(".numbers")
+    //     .data(csvData)
+    //     .enter()
+    //     .append("text")
+    //     .sort(function(a, b){
+    //         return b[expressed]-a[expressed]
+    //     })
+    //     .attr("class", function(d){
+    //         return "numbers " + d.adm1_code;
+    //     })
+    //     .attr("text-anchor", "middle")
+    //     .attr("x", function(d, i){
+    //         var fraction = chartWidth / csvData.length;
+    //         return i * fraction + (fraction - 1) / 2;
+    //     })
+    //     .attr("y", function(d){
+    //         return chartHeight - yScale(parseFloat(d[expressed])) + 15;
+    //     })
+    //     .text(function(d){
+    //         return d[expressed];
+    //     });
+
+    var chartTitle = chart.append("text")
+        .attr("x", 20)
+        .attr("y", 40)
+        .attr("class", "chartTitle")
+        .text("Number of Variable " + expressed + " in each Chicago Neighborhood");
+
+};
