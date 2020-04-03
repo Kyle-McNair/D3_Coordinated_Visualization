@@ -1,7 +1,9 @@
 //variables for data join
 
-
-//var expressed = attrArray[0]; //initial attribute
+var attrArray = ["No_HS_Diploma", "HS_Diploma", "Some_College", "Bachelors_or_Greater", "Edu_Total","Owner_Occ","Renter_Occ","Total_Housing",
+"Below_Pov","Pct_Below_Poverty","Total_Ins","Perc_Ins","Perc_Unins","Less_10G","10G_15G","15G_20G","20G_25G","25G_30G","30G_35G",
+"35G_40G","40G_45G","45G_50G","50G_60G","60G_75G","75G_100G","100G_125G", "125G_150G", "150G_200G", "200G_More", "Total_Count", "Median_Household"];
+var expressed = attrArray[0]; //initial attribute
 
 
 //begin script when window loads
@@ -59,33 +61,8 @@ function setMap(){
         var lakeRegions = topojson.feature(lake, lake.objects.LakeMichigan);
         var stateRegions = topojson.feature(state, state.objects.states);
 
-        var attrArray = ["No_HS_Diploma", "HS_Diploma", "Some_College", "Bachelors_or_Greater", "Edu_Total","Owner_Occ","Renter_Occ","Total_Housing",
-        "Below_Pov","Pct_Below_Poverty","Total_Ins","Perc_Ins","Perc_Unins","Less_10G","10G_15G","15G_20G","20G_25G","25G_30G","30G_35G",
-        "35G_40G","40G_45G","45G_50G","50G_60G","60G_75G","75G_100G","100G_125G", "125G_150G", "150G_200G", "200G_More", "Total_Count", "Median_Household"];
+        chicagoNeighborhoods = joinData(chicagoNeighborhoods, csvData);
 
-        for (var i=0; i<csvData.length; i++){
-            var csvRegion = csvData[i]; //the current region
-            var csvKey = csvRegion.Neighborho; //the CSV primary key
-    
-            //loop through geojson regions to find correct region
-            for (var a=0; a<chicagoNeighborhoods.length; a++){
-    
-                var geojsonProps = chicagoNeighborhoods[a].properties; //the current region geojson properties
-                var geojsonKey = geojsonProps.Neighborho; //the geojson primary key
-    
-                //where primary keys match, transfer csv data to geojson properties object
-                if (geojsonKey == csvKey){
-    
-                    //assign all attributes and values
-                    attrArray.forEach(function(attr){
-                        var val = parseFloat(csvRegion[attr]); //get csv attribute value
-                        geojsonProps[attr] = val; //assign attribute and value to geojson properties
-                    });
-                };
-            };
-        };
-        console.log(geojsonProps);
-        console.log(chicagoNeighborhoods);
         //midwest variable brings in the Illinois and Indiana state boundarie
         var midwest = map.append("path")
             //calls the stateRegions from above
@@ -102,15 +79,48 @@ function setMap(){
             .attr("class", "LakeMichigan")
             .attr("d",path);
 
-        //.community is different as the map will select all from the chicagoNeighborhoods data and then brings it in.
-        var chi = map.selectAll(".community")
-            .data(chicagoNeighborhoods)
-            .enter()
-            .append("path")
-            //draws the boundaries of each neighborhood
-            .attr("class", function(d){
-                return "community " + d.properties.Neighborho;
-            })
-            .attr("d", path);
+        //create the color scale
+        var colorScale = makeColorScale(csvData);
+
+        setEnumerationUnits(chicagoNeighborhoods, map, path);
         };
 };
+
+function joinData(chicagoNeighborhoods, csvData){
+    for (var i=0; i<csvData.length; i++){
+        var csvRegion = csvData[i]; //the current region
+        var csvKey = csvRegion.Neighborho; //the CSV primary key
+
+        //loop through geojson regions to find correct region
+        for (var a=0; a<chicagoNeighborhoods.length; a++){
+
+            var geojsonProps = chicagoNeighborhoods[a].properties; //the current region geojson properties
+            var geojsonKey = geojsonProps.Neighborho; //the geojson primary key
+
+            //where primary keys match, transfer csv data to geojson properties object
+            if (geojsonKey == csvKey){
+
+                //assign all attributes and values
+                attrArray.forEach(function(attr){
+                    var val = parseFloat(csvRegion[attr]); //get csv attribute value
+                    geojsonProps[attr] = val; //assign attribute and value to geojson properties
+                });
+            };
+        };
+    };
+    return chicagoNeighborhoods;
+};
+
+function setEnumerationUnits(chicagoNeighborhoods, map, path){
+    console.log(chicagoNeighborhoods)
+    //.community is different as the map will select all from the chicagoNeighborhoods data and then brings it in.
+    var chi = map.selectAll(".community")
+        .data(chicagoNeighborhoods)
+        .enter()
+        .append("path")
+        //draws the boundaries of each neighborhood
+        .attr("class", function(d){
+            return "community " + d.properties.Neighborho;
+                })
+        .attr("d", path);
+}
