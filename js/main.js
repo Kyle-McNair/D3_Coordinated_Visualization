@@ -15,7 +15,7 @@ function setMap(){
 
     //map frame dimensions
     var width = window.innerWidth*0.5,
-        height = 800;
+        height = 700;
 
     //create new svg container for the map
     var map = d3.select("body")
@@ -29,7 +29,7 @@ function setMap(){
         .center([-0.05, 41.83])
         .rotate([87.65, 0, 0])
         .parallels([40, 45])
-        .scale(110000.00)//extra zoom since this is a large scale map
+        .scale(97000.00)//extra zoom since this is a large scale map
         .translate([width / 2, height / 2]);
     //call in the projection
     var path = d3.geoPath()
@@ -171,7 +171,7 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
 function setChart(csvData, colorScale){
     //chart frame dimensions
     var chartWidth = window.innerWidth * 0.45,
-        chartHeight = 600;
+        chartHeight = 695;
 
     var chart = d3.select("body")
         .append("svg")
@@ -179,10 +179,34 @@ function setChart(csvData, colorScale){
         .attr("height", chartHeight)
         .attr("class", "chart");
 
-    var yScale = d3.scaleLinear()
-        .range([0, chartHeight])
+    var xScale = d3.scaleLinear()
+        .range([0, chartWidth])
         .domain([0, 25000]);
 
+    // var bars = chart.selectAll(".bars")
+    //     .data(csvData)
+    //     .enter()
+    //     .append("rect")
+    //     .sort(function(a, b){
+    //         return b[expressed] - a[expressed]
+    //     })
+    //     .attr("class", function(d){
+    //         return "bars " + d.Neighborho;
+    //     })
+    //     .attr("width", chartWidth / csvData.length - 1)
+    //     .attr("x", function(d, i){
+    //         return i * (chartWidth / csvData.length);
+    //     })
+    //     .attr("height", function(d){
+    //         return yScale(parseFloat(d[expressed]));
+    //     })
+    //     .attr("y", function(d){
+    //         return chartHeight - yScale(parseFloat(d[expressed]))
+    //     })
+    //     .style("fill", function(d){
+    //             return colorScale(d[expressed]);
+    //     });
+        
     var bars = chart.selectAll(".bars")
         .data(csvData)
         .enter()
@@ -193,43 +217,19 @@ function setChart(csvData, colorScale){
         .attr("class", function(d){
             return "bars " + d.Neighborho;
         })
-        .attr("width", chartWidth / csvData.length - 1)
-        .attr("x", function(d, i){
-            return i * (chartWidth / csvData.length);
+        .attr("height", chartHeight / csvData.length - 1)
+        .attr("y", function(d, i){
+            return i * (chartHeight / csvData.length);
         })
-        .attr("height", function(d){
-            return yScale(parseFloat(d[expressed]));
+        .attr("width", function(d){
+            return xScale(parseFloat(d[expressed]));
         })
-        .attr("y", function(d){
-            return chartHeight - yScale(parseFloat(d[expressed]))
-        })
+        // .attr("x", function(d){
+        //     return chartWidth - xScale(parseFloat(d[expressed]))
+        // })
         .style("fill", function(d){
                 return colorScale(d[expressed]);
         });
-        
-        
-
-    // var numbers = chart.selectAll(".numbers")
-    //     .data(csvData)
-    //     .enter()
-    //     .append("text")
-    //     .sort(function(a, b){
-    //         return b[expressed]-a[expressed]
-    //     })
-    //     .attr("class", function(d){
-    //         return "numbers " + d.adm1_code;
-    //     })
-    //     .attr("text-anchor", "middle")
-    //     .attr("x", function(d, i){
-    //         var fraction = chartWidth / csvData.length;
-    //         return i * fraction + (fraction - 1) / 2;
-    //     })
-    //     .attr("y", function(d){
-    //         return chartHeight - yScale(parseFloat(d[expressed])) + 15;
-    //     })
-    //     .text(function(d){
-    //         return d[expressed];
-    //     });
 
     var chartTitle = chart.append("text")
         .attr("x", 20)
