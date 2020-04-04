@@ -1,9 +1,14 @@
 //variables for data join
 
-var attrArray = ["No_HS_Diploma", "HS_Diploma", "Some_College", "Bachelors_or_Greater", "Edu_Total","Owner_Occ","Renter_Occ","Total_Housing",
-"Below_Pov","Pct_Below_Poverty","Total_Ins","Perc_Ins","Perc_Unins","Less_10G","10G_15G","15G_20G","20G_25G","25G_30G","30G_35G",
-"35G_40G","40G_45G","45G_50G","50G_60G","60G_75G","75G_100G","100G_125G", "125G_150G", "150G_200G", "200G_More", "Total_Count", "Median_Household"];
-var expressed = attrArray[0]; //initial attribute
+var attrArray = ["No High School Diploma", "High School Diploma", "Some College", "Bachelors Degree or Higher",	"Education Total",
+    "Owner Occupied", "Renter Occupied", "Total Housing", "Below Poverty", "Percent Below Poverty",	"Total with Health Insurance",
+    "Percent Insured",	"Percent Uninsured", "Income < $10,000",	"Income $10,000-$14,999", "Income $15,000-$19,999",	"Income $20,000-$24,999",
+    "Income $25,000-$29,999", "Income $30,000-$34,999", "Income $35,000-$39,999", "Income $40,000-$44,999", "Income $45,000-$49,999",
+    "Income $50,000-$59,999", "Income $60,000-$74,999", "Income $75,000-$99,999", "Income $100,000-$124,999", "Income $125,000-$149,999",
+    "Income $150,000-$199,999",	"Income > $200,000", "Total Count",	"Median Household Income"];
+
+
+var expressed = attrArray[30]; //initial attribute
 
 
 //begin script when window loads
@@ -22,7 +27,8 @@ function setMap(){
         .append("svg")
         .attr("class", "map")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .style("float","left");
 
     //create Albers equal area conic projection centered on Chicago
     var projection = d3.geoAlbers()
@@ -84,6 +90,7 @@ function setMap(){
 
         setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale);
 
+        setTitle(csvData)
         //add coordinated visualization to the map
         setChart(csvData, colorScale);
         };
@@ -168,10 +175,28 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
         });
 };
 
+function setTitle(csvData){
+    var titleWidth = window.innerWidth * 0.47,
+        titleHeight = 30;
+
+    var chartTitle = d3.select("body")
+        .append("svg")
+        .attr("width", titleWidth)
+        .attr("height", titleHeight)
+        .attr("class", "chartTitle");
+
+    var chartText = chartTitle.append("text")
+        .attr("x", 10)
+        .attr("y", 25)
+        .attr("class", "titleText")
+        .text("Chicago Demographic Data: " + expressed);
+};
+
 function setChart(csvData, colorScale){
+
     //chart frame dimensions
-    var chartWidth = window.innerWidth * 0.45,
-        chartHeight = 695;
+    var chartWidth = window.innerWidth * 0.47,
+        chartHeight = 660;
 
     var chart = d3.select("body")
         .append("svg")
@@ -181,31 +206,7 @@ function setChart(csvData, colorScale){
 
     var xScale = d3.scaleLinear()
         .range([0, chartWidth])
-        .domain([0, 25000]);
-
-    // var bars = chart.selectAll(".bars")
-    //     .data(csvData)
-    //     .enter()
-    //     .append("rect")
-    //     .sort(function(a, b){
-    //         return b[expressed] - a[expressed]
-    //     })
-    //     .attr("class", function(d){
-    //         return "bars " + d.Neighborho;
-    //     })
-    //     .attr("width", chartWidth / csvData.length - 1)
-    //     .attr("x", function(d, i){
-    //         return i * (chartWidth / csvData.length);
-    //     })
-    //     .attr("height", function(d){
-    //         return yScale(parseFloat(d[expressed]));
-    //     })
-    //     .attr("y", function(d){
-    //         return chartHeight - yScale(parseFloat(d[expressed]))
-    //     })
-    //     .style("fill", function(d){
-    //             return colorScale(d[expressed]);
-    //     });
+        .domain([0, 125000]);
         
     var bars = chart.selectAll(".bars")
         .data(csvData)
@@ -229,12 +230,29 @@ function setChart(csvData, colorScale){
         // })
         .style("fill", function(d){
                 return colorScale(d[expressed]);
-        });
+        })
+        .style("stroke", "#000000")
+        .style("stroke-width", "0.5px");
 
-    var chartTitle = chart.append("text")
-        .attr("x", 20)
-        .attr("y", 40)
-        .attr("class", "chartTitle")
-        .text("Number of Variable " + expressed + " in each Chicago Neighborhood");
+    var numbers = chart.selectAll(".numbers")//used to bring in labels of the total values
+        .data(csvData)
+        .enter()
+        .append("text")
+        .sort(function(a, b){
+            return b[expressed] - a[expressed]
+        })
+        .attr("class", function(d){
+            return "numbers " + d.Neighborho;
+        })
+        .attr("text-anchor", "middle")
+        .attr("y", function(d, i){
+            var fraction = chartHeight / csvData.length;
+            return i * fraction + (fraction - 1);
+        })
+        .attr("x", function (d){
+            return xScale(d[expressed]) + 15;})
+        .text(function(d){
+            return " -- " + d[expressed];
+        });
 
 };
