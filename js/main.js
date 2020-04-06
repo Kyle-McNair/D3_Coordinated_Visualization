@@ -184,7 +184,7 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
 //create a title above the horizontal bar chart
 function setTitle(csvData){
     //same width as bar chart, but height is a lot shorter.
-    var titleWidth = window.innerWidth * 0.47,
+    var titleWidth = window.innerWidth * 0.45,
         titleHeight = 30;
     //append through svg and is the same settings as bar chart, only text title is
     //what is being used.
@@ -206,7 +206,7 @@ function setChart(csvData, colorScale){
 
     //chart frame dimensions
     //creating a horizontal bar chart
-    var chartWidth = window.innerWidth * 0.47,
+    var chartWidth = window.innerWidth * 0.45,
         chartHeight = 660;
 
     //adding a blank svg to the html page
