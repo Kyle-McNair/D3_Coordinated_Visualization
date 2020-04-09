@@ -1,3 +1,4 @@
+(function(){
 //variables for data join
 //Updated names of the array tht will be joined with data
 var attrArray = ["No High School Diploma", "High School Diploma", "Some College", "Bachelors Degree or Higher",	"Education Total",
@@ -8,8 +9,23 @@ var attrArray = ["No High School Diploma", "High School Diploma", "Some College"
     "Income $150,000-$199,999",	"Income > $200,000", "Total Count",	"Median Household Income"];
 
 //expressed goes through each attribute from attrArray
-var expressed = attrArray[30]; //initial attribute
+var expressed = attrArray[0]; //initial attribute
 
+
+//chart frame dimensions
+var chartWidth = window.innerWidth * 0.55,
+chartHeight = 400
+leftPadding = 55,
+rightPadding = 10,
+topBottomPadding = 10,
+chartInnerWidth = chartWidth - leftPadding - rightPadding,
+chartInnerHeight = chartHeight - topBottomPadding * 2,
+translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+
+//create a scale to size bars proportionally to frame and for axis
+var yScale = d3.scaleLinear()
+.range([380, 0])
+.domain([0, 130000]);
 
 //begin script when window loads
 window.onload = setMap();
@@ -17,10 +33,10 @@ window.onload = setMap();
 
 //set up choropleth map
 function setMap(){
-
+    
     //map frame dimensions
-    var width = window.innerWidth*0.5,
-        height = 700;
+    var width = window.innerWidth*0.4,
+        height = 800;
 
     //create new svg container for the map
     var map = d3.select("body")
@@ -51,7 +67,7 @@ function setMap(){
     promises.push(d3.json("data/states.topojson"));
     //list of promises goes and has the callback function be called
     Promise.all(promises).then(callback);
-
+    
     //callback brings in the data
     function callback(data){
         //these 4 variables list are from the promise list
@@ -87,14 +103,14 @@ function setMap(){
 
         //create the color scale
         var colorScale = makeColorScale(csvData);
-
+        
         //set enumeration units function is called
         setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale);
 
-        //set Title function is called
-        setTitle(csvData)
         //add coordinated visualization to the map
         setChart(csvData, colorScale);
+        createDropdown(csvData)
+
         };
 };
 
@@ -181,33 +197,21 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
             }
         });
 };
-//create a title above the horizontal bar chart
-function setTitle(csvData){
-    //same width as bar chart, but height is a lot shorter.
-    var titleWidth = window.innerWidth * 0.45,
-        titleHeight = 30;
-    //append through svg and is the same settings as bar chart, only text title is
-    //what is being used.
-    var chartTitle = d3.select("body")
-        .append("svg")
-        .attr("width", titleWidth)
-        .attr("height", titleHeight)
-        .attr("class", "chartTitle");
 
-    var chartText = chartTitle.append("text")
-        .attr("x", 10)
-        .attr("y", 25)
-        .attr("class", "titleText")
-        //go through each attribute to be named
-        .text("Chicago Demographic Data: " + expressed);
-};
 
 function setChart(csvData, colorScale){
 
     //chart frame dimensions
     //creating a horizontal bar chart
-    var chartWidth = window.innerWidth * 0.45,
-        chartHeight = 660;
+    // var chartWidth = window.innerWidth * 0.55,
+    //     chartHeight = 400
+    //     leftPadding = 55,
+    //     rightPadding = 10,
+    //     topBottomPadding = 10,
+    //     chartHeightscale = (chartHeight - 20)
+    //     chartInnerWidth = chartWidth - leftPadding - rightPadding,
+    //     chartInnerHeight = chartHeight - topBottomPadding * 2,
+    //     translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
     //adding a blank svg to the html page
     var chart = d3.select("body")
@@ -216,67 +220,132 @@ function setChart(csvData, colorScale){
         .attr("height", chartHeight)
         .attr("class", "chart");
 
-    //the xScale is based on the width of the chart, and the domain is the median household income variable for now.
-    var xScale = d3.scaleLinear()
-        .range([0, chartWidth])
-        .domain([0, 125000]);
-        
-    //select the bars and bring in the csvData that was joined
-    var bars = chart.selectAll(".bars")
+//create a rectangle for chart background fill
+    var chartBackground = chart.append("rect")
+        .attr("class", "chartBackground")
+        .attr("width", chartInnerWidth)
+        .attr("height", chartInnerHeight)
+        .attr("transform", translate);
+
+    // var yScale = d3.scaleLinear()
+    //     .range([380, 0])
+    //     .domain([0, 130000]);
+
+    var bars = chart.selectAll(".bar")
         .data(csvData)
         .enter()
         .append("rect")
         .sort(function(a, b){
-            //this function sorts from highest to lowest values
-            return b[expressed] - a[expressed]
-        })
-        //bars are based on the neighborhood values
+                    //this function sorts from highest to lowest values
+                return b[expressed] - a[expressed]
+                })
         .attr("class", function(d){
-            return "bars " + d.Neighborho;
+            return "bar " + d.Neighborho;
         })
-        //height of each bar
-        .attr("height", chartHeight / csvData.length - 1)
-        .attr("y", function(d, i){
-            return i * (chartHeight / csvData.length);
-        })
-        //width of the bar is based on the attribute value
-        .attr("width", function(d){
-            return xScale(parseFloat(d[expressed]));
-        })
-        //color fill is used from the colorscale function of natural breaks
-        .style("fill", function(d){
-                return colorScale(d[expressed]);
-        })
-        //line colors and width
-        .style("stroke", "#000000")
-        .style("stroke-width", "0.5px");
+        .attr("width", chartInnerWidth / csvData.length - 1)
+
+
+    var yAxis = d3.axisLeft()
+        .scale(yScale);
+        
+
+    //create a text element for the chart title
+    var chartTitle = chart.append("text")
+        .attr("x", 300)
+        .attr("y", 30)
+        .attr("class", "titleText")
+        .text("Chicago Demographic Data: " + expressed);
+
+    //place axis
+    var axis = chart.append("g")
+        .attr("class", "axis")
+        .attr("transform", translate)
+        .call(yAxis);
+
+    //create frame for chart border
+    var chartFrame = chart.append("rect")
+        .attr("class", "chartFrame")
+        .attr("width", chartInnerWidth)
+        .attr("height", chartInnerHeight)
+        .attr("transform", translate);
     
-    //adding numbers to the horizontal bar chart
-    var numbers = chart.selectAll(".numbers")//used to bring in labels of the total values
-        //bring in the data
-        .data(csvData)
-        .enter()
-        //bring in the text of each bar value
-        .append("text")
-        .sort(function(a, b){
-            //sort from highest to lowest
-            return b[expressed] - a[expressed]
-        })
-        .attr("class", function(d){
-            return "numbers " + d.Neighborho;
-        })
-        //the number texts will be in the middle from each bar
-        .attr("text-anchor", "middle")
-        .attr("y", function(d, i){
-            var fraction = chartHeight / csvData.length;
-            return i * fraction + (fraction - 1);
-        })
-        //this brings the text outside of the bar from the right by 15 pixels
-        .attr("x", function (d){
-            return xScale(d[expressed]) + 15;})
-        //text has the dashes and the attribute value called from the expressed variable
-        .text(function(d){
-            return " -- " + d[expressed];
-        });
+    updateChart(bars, csvData.length, colorScale);
 
 };
+function createDropdown(csvData){
+    //add select element
+    var dropdown = d3.select("body")
+        .append("select")
+        .attr("class", "dropdown")
+        .on("change", function(){
+            changeAttribute(this.value, csvData)
+        });
+
+    //add initial option
+    var titleOption = dropdown.append("option")
+        .attr("class", "titleOption")
+        .attr("disabled", "true")
+        .text("Select Attribute");
+
+    //add attribute name options
+    var attrOptions = dropdown.selectAll("attrOptions")
+        .data(attrArray)
+        .enter()
+        .append("option")
+        .attr("value", function(d){ return d })
+        .text(function(d){ return d });
+};
+function changeAttribute(attribute, csvData){
+    //change the expressed attribute
+    expressed = attribute;
+
+    //recreate the color scale
+    var colorScale = makeColorScale(csvData);
+
+    var chi = d3.selectAll(".community")
+        .style("fill", function(d){
+            //use value variable from the expressed value
+            var value = d.properties[expressed];
+            if(value){
+                //colors are used from the expressed global variable
+                return colorScale(value);
+            } else{
+                return "#ccc"
+            }
+        });
+
+    //re-sort, resize, and recolor bars
+    var bars = d3.selectAll(".bar")
+        //re-sort bars
+        .sort(function(a, b){
+            return b[expressed] - a[expressed];
+        })
+
+    updateChart(bars, csvData.length, colorScale, csvData);
+};
+function updateChart(bars, n, colorScale){
+    //position bars
+    bars.attr("x", function(d, i){
+            return i * (chartInnerWidth / n) + leftPadding;
+        })
+        //size/resize bars
+        .attr("height", function(d, i){
+            return 380 - yScale(parseFloat(d[expressed]));
+        })
+        .attr("y", function(d, i){
+            return yScale(parseFloat(d[expressed])) + topBottomPadding;
+        })
+        //color/recolor bars
+        .style("fill", function(d){
+            var value = d[expressed];
+            if(value) {
+                return colorScale(value);
+            } else {
+                return "#ccc";
+            }
+    });
+    var chartTitle = d3.select(".titleText")
+    .text("Chicago Demographic Data: " + expressed);
+};
+
+})();
