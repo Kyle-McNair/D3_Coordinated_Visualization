@@ -110,6 +110,7 @@ function setMap(){
         //add coordinated visualization to the map
         setChart(csvData, colorScale);
         createDropdown(csvData)
+        
 
         };
 };
@@ -152,13 +153,13 @@ function makeColorScale(data){
 function joinData(chicagoNeighborhoods, csvData){
     for (var i=0; i<csvData.length; i++){
         var csvRegion = csvData[i]; //the current region
-        var csvKey = csvRegion.Neighborho; //the CSV primary key
+        var csvKey = csvRegion.Neighborhood; //the CSV primary key
 
         //loop through geojson regions to find correct region
         for (var a=0; a<chicagoNeighborhoods.length; a++){
             //goes through the csv and joins the chicago neighborhood json to join the data by the neighborhood name
             var geojsonProps = chicagoNeighborhoods[a].properties; //the current region geojson properties
-            var geojsonKey = geojsonProps.Neighborho; //the geojson primary key
+            var geojsonKey = geojsonProps.Neighborhood; //the geojson primary key
 
             //where primary keys match, transfer csv data to geojson properties object
             if (geojsonKey == csvKey){
@@ -183,7 +184,7 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
         .append("path")
         //draws the boundaries of each neighborhood
         .attr("class", function(d){
-            return "community " + d.properties.Neighborho;
+            return "community " + d.properties.Neighborhood;
                 })
         .attr("d", path)
         .style("fill", function(d){
@@ -195,23 +196,21 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
             } else{
                 return "#ccc"
             }
-        });
+        })
+        .on("mouseover", function(d){
+            highlight(d.properties);
+        })
+        .on("mouseout", function(d){
+            dehighlight(d.properties);
+        })
+        .on("mousemove", moveLabel);
+
+    var desc = chi.append("desc")
+        .text('{"stroke": "#000", "stroke-width": "1px"}');
 };
 
 
 function setChart(csvData, colorScale){
-
-    //chart frame dimensions
-    //creating a horizontal bar chart
-    // var chartWidth = window.innerWidth * 0.55,
-    //     chartHeight = 400
-    //     leftPadding = 55,
-    //     rightPadding = 10,
-    //     topBottomPadding = 10,
-    //     chartHeightscale = (chartHeight - 20)
-    //     chartInnerWidth = chartWidth - leftPadding - rightPadding,
-    //     chartInnerHeight = chartHeight - topBottomPadding * 2,
-    //     translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 
     //adding a blank svg to the html page
     var chart = d3.select("body")
@@ -240,9 +239,15 @@ function setChart(csvData, colorScale){
                 return b[expressed] - a[expressed]
                 })
         .attr("class", function(d){
-            return "bar " + d.Neighborho;
+            return "bar " + d.Neighborhood;
         })
         .attr("width", chartInnerWidth / csvData.length - 1)
+        .on("mouseover", highlight)
+        .on("mouseout", dehighlight)
+        .on("mousemove", moveLabel);
+    
+    var desc = bars.append("desc")
+        .text('{"stroke": "none", "stroke-width": "0px"}');
 
 
     var yAxis = d3.axisLeft()
@@ -303,6 +308,8 @@ function changeAttribute(attribute, csvData){
     var colorScale = makeColorScale(csvData);
 
     var chi = d3.selectAll(".community")
+        .transition()
+        .duration(750)
         .style("fill", function(d){
             //use value variable from the expressed value
             var value = d.properties[expressed];
@@ -320,6 +327,11 @@ function changeAttribute(attribute, csvData){
         .sort(function(a, b){
             return b[expressed] - a[expressed];
         })
+        .transition()
+        .delay(function(d, i){
+            return i * 10
+        })
+        .duration(500)
 
     updateChart(bars, csvData.length, colorScale, csvData);
 };
@@ -347,5 +359,70 @@ function updateChart(bars, n, colorScale){
     var chartTitle = d3.select(".titleText")
     .text("Chicago Demographic Data: " + expressed);
 };
+function highlight(props){
+    //change stroke
+    var selected = d3.selectAll("." + props.Neighborhood)
+        .style("stroke", "#4a1486")
+        .style("stroke-width", "3");
+    setLabel(props)
+};
+function dehighlight(props){
+    var selected = d3.selectAll("." + props.Neighborhood)
+        .style("stroke", function(){
+            return getStyle(this, "stroke")
+        })
+        .style("stroke-width", function(){
+            return getStyle(this, "stroke-width")
+        });
 
+    function getStyle(element, styleName){
+        var styleText = d3.select(element)
+            .select("desc")
+            .text();
+
+        var styleObject = JSON.parse(styleText);
+
+        return styleObject[styleName];
+    };
+    d3.select(".infolabel")
+        .remove();
+};
+function setLabel(props){
+    //label content
+    var labelAttribute = "<h1>" + props[expressed] +
+        "</h1><b>" + expressed + "</b>";
+
+    //create info label div
+    var infolabel = d3.select("body")
+        .append("div")
+        .attr("class", "infolabel")
+        .attr("id", props.Neighborhood + "_label")
+        .html(labelAttribute);
+
+    var regionName = infolabel.append("div")
+        .attr("class", "labelname")
+        .html(props.Neighborhood);
+};
+function moveLabel(){
+    //get width of label
+    var labelWidth = d3.select(".infolabel")
+        .node()
+        .getBoundingClientRect()
+        .width;
+
+    //use coordinates of mousemove event to set label coordinates
+    var x1 = d3.event.clientX + 10,
+        y1 = d3.event.clientY - 75,
+        x2 = d3.event.clientX - labelWidth - 10,
+        y2 = d3.event.clientY + 25;
+
+    //horizontal label coordinate, testing for overflow
+    var x = d3.event.clientX > window.innerWidth - labelWidth - 20 ? x2 : x1; 
+    //vertical label coordinate, testing for overflow
+    var y = d3.event.clientY < 75 ? y2 : y1; 
+
+    d3.select(".infolabel")
+        .style("left", x + "px")
+        .style("top", y + "px");
+};
 })();
