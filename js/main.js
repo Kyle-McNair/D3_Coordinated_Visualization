@@ -1,12 +1,15 @@
 (function(){
 //variables for data join
 //Updated names of the array tht will be joined with data
-var attrArray = ["No High School Diploma", "High School Diploma", "Some College", "Bachelors Degree or Higher",	"Education Total",
-    "Owner Occupied", "Renter Occupied", "Total Housing", "Below Poverty", "Percent Below Poverty",	"Total with Health Insurance",
-    "Percent Insured",	"Percent Uninsured", "Income < $10,000",	"Income $10,000-$14,999", "Income $15,000-$19,999",	"Income $20,000-$24,999",
-    "Income $25,000-$29,999", "Income $30,000-$34,999", "Income $35,000-$39,999", "Income $40,000-$44,999", "Income $45,000-$49,999",
-    "Income $50,000-$59,999", "Income $60,000-$74,999", "Income $75,000-$99,999", "Income $100,000-$124,999", "Income $125,000-$149,999",
-    "Income $150,000-$199,999",	"Income > $200,000", "Total Count",	"Median Household Income"];
+// var attrArray = ["No High School Diploma", "High School Diploma", "Some College", "Bachelors Degree or Higher",	"Education Total",
+//     "Owner Occupied", "Renter Occupied", "Total Housing", "Below Poverty", "Percent Below Poverty",	"Total with Health Insurance",
+//     "Percent Insured",	"Percent Uninsured", "Income < $10,000",	"Income $10,000-$14,999", "Income $15,000-$19,999",	"Income $20,000-$24,999",
+//     "Income $25,000-$29,999", "Income $30,000-$34,999", "Income $35,000-$39,999", "Income $40,000-$44,999", "Income $45,000-$49,999",
+//     "Income $50,000-$59,999", "Income $60,000-$74,999", "Income $75,000-$99,999", "Income $100,000-$124,999", "Income $125,000-$149,999",
+//     "Income $150,000-$199,999",	"Income > $200,000", "Total Count",	"Median Household Income"];
+
+var attrArray = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Percent Below Poverty",
+"Percent with Health Insurance", "Percent with No Health Insurance", "Owner Occupied","Renter Occupied",	"Median Household Income"];
 
 //expressed goes through each attribute from attrArray
 var expressed = attrArray[0]; //initial attribute
@@ -25,7 +28,7 @@ translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
 //create a scale to size bars proportionally to frame and for axis
 var yScale = d3.scaleLinear()
 .range([380, 0])
-.domain([0, 130000]);
+.domain([0, 100]);
 
 //begin script when window loads
 window.onload = setMap();
@@ -84,7 +87,7 @@ function setMap(){
         var stateRegions = topojson.feature(state, state.objects.states);
 
         chicagoNeighborhoods = joinData(chicagoNeighborhoods, csvData);
-
+        
         //midwest variable brings in the Illinois and Indiana state boundarie
         var midwest = map.append("path")
             //calls the stateRegions from above
@@ -168,10 +171,12 @@ function joinData(chicagoNeighborhoods, csvData){
                 attrArray.forEach(function(attr){
                     var val = parseFloat(csvRegion[attr]); //get csv attribute value
                     geojsonProps[attr] = val; //assign attribute and value to geojson properties
+                    console.log(val)
                 });
             };
         };
     };
+    console.log(chicagoNeighborhoods)
     //chicagoNeighborhoods json is updated and will be returned for enumeration units and color scale
     return chicagoNeighborhoods;
 };
@@ -225,10 +230,6 @@ function setChart(csvData, colorScale){
         .attr("width", chartInnerWidth)
         .attr("height", chartInnerHeight)
         .attr("transform", translate);
-
-    // var yScale = d3.scaleLinear()
-    //     .range([380, 0])
-    //     .domain([0, 130000]);
 
     var bars = chart.selectAll(".bar")
         .data(csvData)
@@ -362,7 +363,7 @@ function updateChart(bars, n, colorScale){
 function highlight(props){
     //change stroke
     var selected = d3.selectAll("." + props.Neighborhood)
-        .style("stroke", "#4a1486")
+        .style("stroke", "#c51b8a")
         .style("stroke-width", "3");
     setLabel(props)
 };
@@ -396,12 +397,13 @@ function setLabel(props){
     var infolabel = d3.select("body")
         .append("div")
         .attr("class", "infolabel")
-        .attr("id", props.Neighborhood + "_label")
+        .attr("id", props.Label + "_label")
         .html(labelAttribute);
 
     var regionName = infolabel.append("div")
         .attr("class", "labelname")
-        .html(props.Neighborhood);
+        .html(props.Label);
+    console.log(props.Label)
 };
 function moveLabel(){
     //get width of label
