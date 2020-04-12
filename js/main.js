@@ -13,8 +13,7 @@ var attrArray = ["No High School Diploma","High School Diploma","Some College","
 
 //expressed goes through each attribute from attrArray
 var expressed = attrArray[0]; //initial attribute
-
-
+var yAxis;
 //chart frame dimensions
 var chartWidth = window.innerWidth * 0.55,
 chartHeight = 400
@@ -24,11 +23,6 @@ topBottomPadding = 10,
 chartInnerWidth = chartWidth - leftPadding - rightPadding,
 chartInnerHeight = chartHeight - topBottomPadding * 2,
 translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
-
-//create a scale to size bars proportionally to frame and for axis
-var yScale = d3.scaleLinear()
-.range([380, 0])
-.domain([0, 100]);
 
 //begin script when window loads
 window.onload = setMap();
@@ -171,12 +165,11 @@ function joinData(chicagoNeighborhoods, csvData){
                 attrArray.forEach(function(attr){
                     var val = parseFloat(csvRegion[attr]); //get csv attribute value
                     geojsonProps[attr] = val; //assign attribute and value to geojson properties
-                    console.log(val)
+                
                 });
             };
         };
     };
-    console.log(chicagoNeighborhoods)
     //chicagoNeighborhoods json is updated and will be returned for enumeration units and color scale
     return chicagoNeighborhoods;
 };
@@ -214,9 +207,18 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
         .text('{"stroke": "#000", "stroke-width": "1px"}');
 };
 
-
 function setChart(csvData, colorScale){
-
+    var yDomain;
+    var incomeDomain = 120000;
+    var percentDomain = 100;
+    if(expressed == 'Median Household Income'){
+        yDomain = incomeDomain
+    } else {
+        yDomain = percentDomain
+    };
+    var yScale = d3.scaleLinear()
+        .range([380, 0])
+        .domain([0, yDomain]);
     //adding a blank svg to the html page
     var chart = d3.select("body")
         .append("svg")
@@ -249,7 +251,7 @@ function setChart(csvData, colorScale){
     
     var desc = bars.append("desc")
         .text('{"stroke": "none", "stroke-width": "0px"}');
-
+    
 
     var yAxis = d3.axisLeft()
         .scale(yScale);
@@ -275,7 +277,7 @@ function setChart(csvData, colorScale){
         .attr("height", chartInnerHeight)
         .attr("transform", translate);
     
-    updateChart(bars, csvData.length, colorScale);
+    updateChart(bars, csvData.length, colorScale, chart, axis);
 
 };
 function createDropdown(csvData){
@@ -291,7 +293,7 @@ function createDropdown(csvData){
     var titleOption = dropdown.append("option")
         .attr("class", "titleOption")
         .attr("disabled", "true")
-        .text("Select Attribute");
+        .text("Select Demographic");
 
     //add attribute name options
     var attrOptions = dropdown.selectAll("attrOptions")
@@ -337,6 +339,18 @@ function changeAttribute(attribute, csvData){
     updateChart(bars, csvData.length, colorScale, csvData);
 };
 function updateChart(bars, n, colorScale){
+    var yDomain;
+    var incomeDomain = 120000;
+    var percentDomain = 100;
+    if(expressed == "Median Household Income"){
+        yDomain = incomeDomain
+    } else {
+        yDomain = percentDomain
+    };
+    var yScale = d3.scaleLinear()
+        .range([380, 0])
+        .domain([0, yDomain]);
+    
     //position bars
     bars.attr("x", function(d, i){
             return i * (chartInnerWidth / n) + leftPadding;
@@ -357,8 +371,16 @@ function updateChart(bars, n, colorScale){
                 return "#ccc";
             }
     });
+    var yAxis = d3.axisLeft()
+        .scale(yScale);
+
+    var axis = d3.select(".axis")
+        .transition()
+        .duration(750)
+        .call(yAxis)
+    
     var chartTitle = d3.select(".titleText")
-    .text("Chicago Demographic Data: " + expressed);
+        .text("Chicago Demographic Data: " + expressed);
 };
 function highlight(props){
     //change stroke
@@ -390,8 +412,19 @@ function dehighlight(props){
 };
 function setLabel(props){
     //label content
-    var labelAttribute = "<h1>" + props[expressed] +
-        "</h1><b>" + expressed + "</b>";
+    var labelAttribute
+
+    var percent = "<h1>" + props[expressed]+"%" +
+        "</h1>"+expressed;
+
+    var income = "<h1>" + "$"+ d3.format(",")(props[expressed]) +
+    "</h1>"+expressed;
+
+    if(expressed == 'Median Household Income'){
+        labelAttribute = income
+    } else {
+        labelAttribute = percent
+    };
 
     //create info label div
     var infolabel = d3.select("body")
@@ -403,7 +436,6 @@ function setLabel(props){
     var regionName = infolabel.append("div")
         .attr("class", "labelname")
         .html(props.Label);
-    console.log(props.Label)
 };
 function moveLabel(){
     //get width of label

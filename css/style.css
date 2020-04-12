@@ -87,6 +87,7 @@ option {
     padding: 0;
     display: inline-block;
     line-height: 1em;
+    font-family: 'Heebo', sans-serif;
 }
 .infolabel {
     margin: 0 20px 0 0;
@@ -98,4 +99,5 @@ option {
     border: solid thin #fff;
     padding: 5px 10px;
     top: -75px;
+    font-family: 'Merriweather Sans', sans-serif;
 }
