@@ -8,8 +8,8 @@
 //     "Income $50,000-$59,999", "Income $60,000-$74,999", "Income $75,000-$99,999", "Income $100,000-$124,999", "Income $125,000-$149,999",
 //     "Income $150,000-$199,999",	"Income > $200,000", "Total Count",	"Median Household Income"];
 
-var attrArray = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Percent Below Poverty",
-"Percent with Health Insurance", "Median Household Income"];
+var attrArray = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Below Poverty",
+"Have Health Insurance", "Median Household Income"];
 
 //expressed goes through each attribute from attrArray
 var expressed = attrArray[0]; //initial attribute
@@ -197,7 +197,6 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
         })
         .on("mouseover", function(d){
             highlight(d.properties);
-            console.log(d.properties);
         })
         .on("mouseout", function(d){
             dehighlight(d.properties);
@@ -255,9 +254,8 @@ function setChart(csvData, colorScale){
     
 
     var yAxis = d3.axisLeft()
-        .scale(yScale);
+        .scale(yScale)
         
-
     //create a text element for the chart title
     var chartTitle = chart.append("text")
         .attr("x", 300)
@@ -270,6 +268,18 @@ function setChart(csvData, colorScale){
         .attr("class", "axis")
         .attr("transform", translate)
         .call(yAxis);
+
+        // .each(function(d) { if(d == 'Median Household Income'){
+        //     d3.select(this)
+        //     .call(d3.axisLeft()
+        //     .tickFormat(d => "$" + d3.format(",.0f")(d))
+        //     .ticks(10)
+        //     .scale(y[d])); } else{
+        //      d3.select(this)
+        //     .call(d3.axisLeft()
+        //     .tickFormat(d => d + "%")
+        //     .ticks(10)
+        //     .scale(y[d])); }})
 
     //create frame for chart border
     var chartFrame = chart.append("rect")
@@ -341,17 +351,20 @@ function changeAttribute(attribute, csvData){
 };
 function updateChart(bars, n, colorScale){
     var yDomain;
+    var yTick;
     var incomeDomain = 120000;
     var percentDomain = 100;
     if(expressed == "Median Household Income"){
         yDomain = incomeDomain
+        yTick = (d => "$" + d3.format(",.0f")(d))
     } else {
         yDomain = percentDomain
+        yTick = (d => d + "%")
     };
     var yScale = d3.scaleLinear()
         .range([380, 0])
         .domain([0, yDomain]);
-    
+
     //position bars
     bars.attr("x", function(d, i){
             return i * (chartInnerWidth / n) + leftPadding;
@@ -373,7 +386,8 @@ function updateChart(bars, n, colorScale){
             }
     });
     var yAxis = d3.axisLeft()
-        .scale(yScale);
+        .tickFormat(yTick)
+        .scale(yScale)
 
     var axis = d3.select(".axis")
         .transition()
@@ -463,21 +477,21 @@ function moveLabel(){
         .style("top", y + "px");
 };
 function setParallelPlot(csvData){
-    var margin = {top: 30, right: 80, bottom: 10, left: 80};
+    var margin = {top: 50, right: 80, bottom: 10, left: 80};
     width = chartWidth - margin.left - margin.right;
     height = 350 - margin.top - margin.bottom;
 
     var plot = d3.select("body")
     .append("svg")
     .attr("width", chartWidth)
-    .attr("height", 350)
+    .attr("height", 370)
     .attr("class", "plot")
     .append("g")
     .attr("transform",
         "translate(" + margin.left + "," + margin.top + ")");
 
-       var keep = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Percent Below Poverty",
-        "Percent with Health Insurance", "Median Household Income"]
+       var keep = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Below Poverty",
+        "Have Health Insurance", "Median Household Income"]
 
         dimensions = d3.keys(csvData[0]).filter(function(csvData) { return keep.indexOf(csvData) >= 0 })
         
@@ -494,7 +508,6 @@ function setParallelPlot(csvData){
         }
           y[name] = d3.scaleLinear()
             .domain( [0, yDomain] ) // --> Same axis range for each group
-            // .domain( [d3.extent(csvData, function(csvData) { return +csvData[name]; })] )
             .range([300, 0])
         }
          // Build the X scale -> it find the best position for each Y axis
@@ -516,10 +529,10 @@ function setParallelPlot(csvData){
                 })
         .style("opacity","1")
         .style("fill", "none")
-        .style("stroke", "#3D3F3E")
+        .style("stroke", "#6d7170")
         .style("stroke-width", "0.5px")
         .append("desc")
-          .text('{"stroke": "#3D3F3E", "stroke-width": "0.5px"}');
+          .text('{"stroke": "#6d7170", "stroke-width": "0.5px"}');
 
       // Draw the axis:
       plot.selectAll("body")
@@ -530,18 +543,26 @@ function setParallelPlot(csvData){
         // I translate this element to its right position on the x axis
         .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
         // And I build the axis with the call function
-        .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(10).scale(y[d])); })
+        .each(function(d) { if(d == 'Median Household Income'){
+            d3.select(this)
+            .call(d3.axisLeft()
+            .tickFormat(d => "$" + d3.format(",.0f")(d))
+            .ticks(10)
+            .scale(y[d])); } else{
+             d3.select(this)
+            .call(d3.axisLeft()
+            .tickFormat(d => d + "%")
+            .ticks(10)
+            .scale(y[d])); }})
         // Add axis title
         .append("text")
         .attr("class","plotTitles")
           .style("text-anchor", "middle")
-          .attr("y", -15)
+          .attr("y", -30)
+          .attr("x", -10)
           .text(function(d) { return d; })
+          .style("padding", "5px")
           .style("fill", "Black")
           .style("text-shadow","5px 5px 5px #bbbbbb")
-          
-    // var desc = plot
-
 };
-
 })();

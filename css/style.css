@@ -117,6 +117,5 @@ option {
 .plotTitles{
     font-family: 'Heebo', sans-serif;
     font-size: 1.1em;
-    font-weight: 600;
-    word-wrap: inherit;
+    font-weight: 650;
 }
