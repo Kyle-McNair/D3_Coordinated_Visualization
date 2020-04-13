@@ -197,6 +197,7 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
         })
         .on("mouseover", function(d){
             highlight(d.properties);
+            console.log(d.properties);
         })
         .on("mouseout", function(d){
             dehighlight(d.properties);
@@ -382,14 +383,14 @@ function updateChart(bars, n, colorScale){
     var chartTitle = d3.select(".titleText")
         .text("Chicago Demographic Data: " + expressed);
 };
-function highlight(props, csvData){
+function highlight(props){
     //change stroke
     var selected = d3.selectAll("." + props.Neighborhood )
         .style("stroke", "#c51b8a")
         .style("stroke-width", "3");
-    var selected = d3.selectAll(csvData.Neighborhood )
-        .style("stroke", "#c51b8a")
-        .style("stroke-width", "3");
+    // var plotSelected = d3.selectAll(csvData.Neighborhood )
+    //     .style("stroke", "#c51b8a")
+    //     .style("stroke-width", "3");
     setLabel(props)
 };
 function dehighlight(props){
@@ -400,9 +401,6 @@ function dehighlight(props){
         .style("stroke-width", function(){
             return getStyle(this, "stroke-width")
         });
-
-
-
     function getStyle(element, styleName){
         var styleText = d3.select(element)
             .select("desc")
@@ -486,13 +484,11 @@ function setParallelPlot(csvData){
         var yDomain;
         var incomeDomain = 120000;
         var percentDomain = 100;
-
-
         var y = {}
         for (i in dimensions) {
           name = dimensions[i]
           if(name == 'Median Household Income'){
-            yDomain = incomeDomain
+            yDomain = (incomeDomain)
             } else {
             yDomain = percentDomain
         }
@@ -516,12 +512,14 @@ function setParallelPlot(csvData){
         .append("path")
         .attr("d",  path)
         .attr("class", function(d){
-            return "plot " + d.Neighborhood;
-        })
-        .style("opacity","0.3")
+            return "path " + d.Neighborhood;
+                })
+        .style("opacity","1")
         .style("fill", "none")
         .style("stroke", "#3D3F3E")
-
+        .style("stroke-width", "0.5px")
+        .append("desc")
+          .text('{"stroke": "#3D3F3E", "stroke-width": "0.5px"}');
 
       // Draw the axis:
       plot.selectAll("body")
@@ -541,6 +539,8 @@ function setParallelPlot(csvData){
           .text(function(d) { return d; })
           .style("fill", "Black")
           .style("text-shadow","5px 5px 5px #bbbbbb")
+          
+    // var desc = plot
 
 };
 
