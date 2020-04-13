@@ -9,7 +9,7 @@
 //     "Income $150,000-$199,999",	"Income > $200,000", "Total Count",	"Median Household Income"];
 
 var attrArray = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Percent Below Poverty",
-"Percent with Health Insurance", "Percent with No Health Insurance", "Owner Occupied","Renter Occupied",	"Median Household Income"];
+"Percent with Health Insurance", "Median Household Income"];
 
 //expressed goes through each attribute from attrArray
 var expressed = attrArray[0]; //initial attribute
@@ -103,12 +103,11 @@ function setMap(){
         
         //set enumeration units function is called
         setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale);
-
+        
         //add coordinated visualization to the map
         setChart(csvData, colorScale);
+        setParallelPlot(csvData)
         createDropdown(csvData)
-        
-
         };
 };
 
@@ -172,6 +171,7 @@ function joinData(chicagoNeighborhoods, csvData){
     };
     //chicagoNeighborhoods json is updated and will be returned for enumeration units and color scale
     return chicagoNeighborhoods;
+    
 };
 
 function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
@@ -217,7 +217,7 @@ function setChart(csvData, colorScale){
         yDomain = percentDomain
     };
     var yScale = d3.scaleLinear()
-        .range([380, 0])
+        .range([780, 0])
         .domain([0, yDomain]);
     //adding a blank svg to the html page
     var chart = d3.select("body")
@@ -382,9 +382,12 @@ function updateChart(bars, n, colorScale){
     var chartTitle = d3.select(".titleText")
         .text("Chicago Demographic Data: " + expressed);
 };
-function highlight(props){
+function highlight(props, csvData){
     //change stroke
-    var selected = d3.selectAll("." + props.Neighborhood)
+    var selected = d3.selectAll("." + props.Neighborhood )
+        .style("stroke", "#c51b8a")
+        .style("stroke-width", "3");
+    var selected = d3.selectAll(csvData.Neighborhood )
         .style("stroke", "#c51b8a")
         .style("stroke-width", "3");
     setLabel(props)
@@ -397,6 +400,8 @@ function dehighlight(props){
         .style("stroke-width", function(){
             return getStyle(this, "stroke-width")
         });
+
+
 
     function getStyle(element, styleName){
         var styleText = d3.select(element)
@@ -459,4 +464,84 @@ function moveLabel(){
         .style("left", x + "px")
         .style("top", y + "px");
 };
+function setParallelPlot(csvData){
+    var margin = {top: 30, right: 80, bottom: 10, left: 80};
+    width = chartWidth - margin.left - margin.right;
+    height = 350 - margin.top - margin.bottom;
+
+    var plot = d3.select("body")
+    .append("svg")
+    .attr("width", chartWidth)
+    .attr("height", 350)
+    .attr("class", "plot")
+    .append("g")
+    .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
+
+       var keep = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Percent Below Poverty",
+        "Percent with Health Insurance", "Median Household Income"]
+
+        dimensions = d3.keys(csvData[0]).filter(function(csvData) { return keep.indexOf(csvData) >= 0 })
+        
+        var yDomain;
+        var incomeDomain = 120000;
+        var percentDomain = 100;
+
+
+        var y = {}
+        for (i in dimensions) {
+          name = dimensions[i]
+          if(name == 'Median Household Income'){
+            yDomain = incomeDomain
+            } else {
+            yDomain = percentDomain
+        }
+          y[name] = d3.scaleLinear()
+            .domain( [0, yDomain] ) // --> Same axis range for each group
+            // .domain( [d3.extent(csvData, function(csvData) { return +csvData[name]; })] )
+            .range([300, 0])
+        }
+         // Build the X scale -> it find the best position for each Y axis
+        x = d3.scalePoint()
+        .range([0, width])
+        .domain(dimensions);
+    
+        function path(csvData) {
+            return d3.line()(dimensions.map(function(p) { return [x(p), y[p](csvData[p])]; }));
+        }
+        plot
+        .selectAll("body")
+        .data(csvData)
+        .enter()
+        .append("path")
+        .attr("d",  path)
+        .attr("class", function(d){
+            return "plot " + d.Neighborhood;
+        })
+        .style("opacity","0.3")
+        .style("fill", "none")
+        .style("stroke", "#3D3F3E")
+
+
+      // Draw the axis:
+      plot.selectAll("body")
+        // For each dimension of the dataset I add a 'g' element:
+        .data(dimensions).enter()
+        .append("g")
+        .attr("class", "plotAxis")
+        // I translate this element to its right position on the x axis
+        .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
+        // And I build the axis with the call function
+        .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(10).scale(y[d])); })
+        // Add axis title
+        .append("text")
+        .attr("class","plotTitles")
+          .style("text-anchor", "middle")
+          .attr("y", -15)
+          .text(function(d) { return d; })
+          .style("fill", "Black")
+          .style("text-shadow","5px 5px 5px #bbbbbb")
+
+};
+
 })();
