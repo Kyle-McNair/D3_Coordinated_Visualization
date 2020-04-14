@@ -1,6 +1,11 @@
 /* Stylesheet by Kyle McNair, 2020 */
-
-
+body{
+    background-color:black 
+}
+.map{
+    margin-left: 10px;
+    border: medium solid #5a5a5a;
+}
 .title {
     font-family: sans-serif;
     font-size: 1.5em;
@@ -9,6 +14,7 @@
 h1{
     font-family: 'Merriweather Sans', sans-serif;
     text-align: center;
+    color: white;
 }
 
 .states {
@@ -26,8 +32,8 @@ h1{
     fill:#C9D3D4; 
 }
 .chart {
-    background-color: #bbbbbb;
-    border: medium solid #999;
+    background-color: #808080;
+    border: medium solid #5a5a5a;
     float: right;
     margin: 0px 10px 0 0;
 }
@@ -56,7 +62,6 @@ h1{
 }
 
 .axis text {
-    font-family: 'Merriweather Sans', sans-serif;
     font-size: 1em;
     fill: black;
     font-family: 'Heebo', sans-serif;
@@ -69,7 +74,7 @@ h1{
 }
 .dropdown {
     position: absolute;
-    top: 200px;
+    top: 150px;
     left: 40px;
     z-index: 10;
     font-family:  'Merriweather Sans', sans-serif;
@@ -103,8 +108,8 @@ option {
     font-family: 'Merriweather Sans', sans-serif;
 }
 .plot{
-    background-color: #bbbbbb;
-    border: medium solid #999;
+    background-color: #808080;
+    border: medium solid #5a5a5a;
     float: right;
     margin: 20px 10px 0 0;
     font-family: 'Merriweather Sans', sans-serif;
@@ -118,4 +123,22 @@ option {
     font-family: 'Heebo', sans-serif;
     font-size: 1.1em;
     font-weight: 650;
+}
+.credit{
+    margin-top: 5px;
+    margin-left: 10px;
+    float: left;
+
+}
+.about{
+    margin-top: 25px;
+    margin-left: 10px;
+    color: white;
+    font-family:  'Merriweather Sans', sans-serif;
+    font-size: 1em;
+    float: left;
+    line-height: 4px;
+}
+a:link, a:visited {
+    color: #79a6cf;
 }

@@ -1,19 +1,13 @@
 (function(){
 //variables for data join
 //Updated names of the array tht will be joined with data
-// var attrArray = ["No High School Diploma", "High School Diploma", "Some College", "Bachelors Degree or Higher",	"Education Total",
-//     "Owner Occupied", "Renter Occupied", "Total Housing", "Below Poverty", "Percent Below Poverty",	"Total with Health Insurance",
-//     "Percent Insured",	"Percent Uninsured", "Income < $10,000",	"Income $10,000-$14,999", "Income $15,000-$19,999",	"Income $20,000-$24,999",
-//     "Income $25,000-$29,999", "Income $30,000-$34,999", "Income $35,000-$39,999", "Income $40,000-$44,999", "Income $45,000-$49,999",
-//     "Income $50,000-$59,999", "Income $60,000-$74,999", "Income $75,000-$99,999", "Income $100,000-$124,999", "Income $125,000-$149,999",
-//     "Income $150,000-$199,999",	"Income > $200,000", "Total Count",	"Median Household Income"];
 
 var attrArray = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Below Poverty",
 "Have Health Insurance", "Median Household Income"];
 
 //expressed goes through each attribute from attrArray
 var expressed = attrArray[0]; //initial attribute
-var yAxis;
+
 //chart frame dimensions
 var chartWidth = window.innerWidth * 0.55,
 chartHeight = 400
@@ -108,6 +102,7 @@ function setMap(){
         setChart(csvData, colorScale);
         setParallelPlot(csvData)
         createDropdown(csvData)
+        setCredits()
         };
 };
 
@@ -258,28 +253,17 @@ function setChart(csvData, colorScale){
         
     //create a text element for the chart title
     var chartTitle = chart.append("text")
-        .attr("x", 300)
+        .attr("x", 280)
         .attr("y", 30)
         .attr("class", "titleText")
         .text("Chicago Demographic Data: " + expressed);
+        
 
     //place axis
     var axis = chart.append("g")
         .attr("class", "axis")
         .attr("transform", translate)
         .call(yAxis);
-
-        // .each(function(d) { if(d == 'Median Household Income'){
-        //     d3.select(this)
-        //     .call(d3.axisLeft()
-        //     .tickFormat(d => "$" + d3.format(",.0f")(d))
-        //     .ticks(10)
-        //     .scale(y[d])); } else{
-        //      d3.select(this)
-        //     .call(d3.axisLeft()
-        //     .tickFormat(d => d + "%")
-        //     .ticks(10)
-        //     .scale(y[d])); }})
 
     //create frame for chart border
     var chartFrame = chart.append("rect")
@@ -479,12 +463,12 @@ function moveLabel(){
 function setParallelPlot(csvData){
     var margin = {top: 50, right: 80, bottom: 10, left: 80};
     width = chartWidth - margin.left - margin.right;
-    height = 350 - margin.top - margin.bottom;
+    height = 360 - margin.top - margin.bottom;
 
     var plot = d3.select("body")
     .append("svg")
     .attr("width", chartWidth)
-    .attr("height", 370)
+    .attr("height", 375)
     .attr("class", "plot")
     .append("g")
     .attr("transform",
@@ -529,10 +513,10 @@ function setParallelPlot(csvData){
                 })
         .style("opacity","1")
         .style("fill", "none")
-        .style("stroke", "#6d7170")
+        .style("stroke", "#b3b3b3")
         .style("stroke-width", "0.5px")
         .append("desc")
-          .text('{"stroke": "#6d7170", "stroke-width": "0.5px"}');
+          .text('{"stroke": "#b3b3b3", "stroke-width": "0.5px"}');
 
       // Draw the axis:
       plot.selectAll("body")
@@ -556,13 +540,46 @@ function setParallelPlot(csvData){
             .scale(y[d])); }})
         // Add axis title
         .append("text")
+        
         .attr("class","plotTitles")
+        .call(wrap, 50)
           .style("text-anchor", "middle")
           .attr("y", -30)
           .attr("x", -10)
           .text(function(d) { return d; })
           .style("padding", "5px")
           .style("fill", "Black")
-          .style("text-shadow","5px 5px 5px #bbbbbb")
+          .call(wrap, 100)
 };
+function wrap(text, width) {
+    text.each(function() {
+      var text = d3.select(this),
+          words = text.text().split(/\s+/).reverse(),
+          word,
+          line = [],
+          lineNumber = 0,
+          lineHeight = 1.1, // ems
+          y = text.attr("y"),
+          dy = 0
+          tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(" "));
+        if (tspan.node().getComputedTextLength() > width) {
+          line.pop();
+          tspan.text(line.join(" "));
+          line = [word];
+          tspan = text.append("tspan").attr("x", 0).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+        }
+      }
+    });
+  }
+function setCredits(){
+    var author = "<p>Data retrieved from <a href = 'https://robparal.com/chicago-data/' target = 'blank'>Rob Paral & Associates</a> and the 2014-2018 American Community Survey from the U.S. Census Bureau</p><br><p>Created by <a href = 'https://kyle-mcnair.github.io' target = 'blank'>Kyle McNair</a></p>";
+    
+    var creditsData = d3.select("body")
+        .append("div")
+        .html(author)
+        .attr("class", "about")
+}
 })();
