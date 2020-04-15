@@ -1,7 +1,9 @@
+// Kyle McNair - D3 Coordinated Visualization
+
+// Have the whole main js be a function
 (function(){
 //variables for data join
 //Updated names of the array tht will be joined with data
-
 var attrArray = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Below Poverty",
 "Have Health Insurance", "Median Household Income"];
 
@@ -98,10 +100,14 @@ function setMap(){
         //set enumeration units function is called
         setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale);
         
-        //add coordinated visualization to the map
+        //add coordinated visualizations to the map
+        //bar chart
         setChart(csvData, colorScale);
+        // parallel plot
         setParallelPlot(csvData)
+        //function to add the dropdown menu
         createDropdown(csvData)
+        //setCredits just appends text through d3 to add the source data.
         setCredits()
         };
 };
@@ -190,64 +196,76 @@ function setEnumerationUnits(chicagoNeighborhoods, map, path, colorScale){
                 return "#ccc"
             }
         })
+        //info label and highlight appears wherever mouse is hovered
         .on("mouseover", function(d){
             highlight(d.properties);
-        })
+        }) // when the enumeration unit is not highlighted, the unit will be dehighlighted 
         .on("mouseout", function(d){
             dehighlight(d.properties);
-        })
+        })//while the mouse is hovered on a unit, the info label html div element will adjust its position based on screen real estate. 
         .on("mousemove", moveLabel);
 
+    // the "desc" adds the text of the initial stroke line style properties. This is essential for the dehighlight function, as it reverts
+    // back to the desc element and will reapply the style based on this desc.
     var desc = chi.append("desc")
         .text('{"stroke": "#000", "stroke-width": "1px"}');
 };
 
 function setChart(csvData, colorScale){
+    //yDomain is a local variable
     var yDomain;
+    //incomeDomain is the Y domain for the median household income variable
     var incomeDomain = 120000;
+    //percentDomain is the Y domain for all the other attributes, which are normalized as percentages.
     var percentDomain = 100;
+    // IF statement: if the expressed variable is selected as Median Household Income, then the
+    // yDomain will be 120000, this will determine how the Yaxis is labeled on the bar chart.
     if(expressed == 'Median Household Income'){
         yDomain = incomeDomain
     } else {
         yDomain = percentDomain
     };
+    // yScale will have the yDomain as the .domain
     var yScale = d3.scaleLinear()
         .range([780, 0])
         .domain([0, yDomain]);
+
     //adding a blank svg to the html page
     var chart = d3.select("body")
         .append("svg")
         .attr("width", chartWidth)
         .attr("height", chartHeight)
-        .attr("class", "chart");
+        .attr("class", "chart"); // .chart is for css
 
-//create a rectangle for chart background fill
+    //create a rectangle for chart background fill
     var chartBackground = chart.append("rect")
-        .attr("class", "chartBackground")
+        .attr("class", "chartBackground") // .chartBackground is for css
         .attr("width", chartInnerWidth)
         .attr("height", chartInnerHeight)
         .attr("transform", translate);
 
+    //create the bars on the chart
     var bars = chart.selectAll(".bar")
-        .data(csvData)
+        .data(csvData)// use the csv data
         .enter()
         .append("rect")
         .sort(function(a, b){
-                    //this function sorts from highest to lowest values
+                //this function sorts from highest to lowest values
                 return b[expressed] - a[expressed]
                 })
         .attr("class", function(d){
             return "bar " + d.Neighborhood;
         })
         .attr("width", chartInnerWidth / csvData.length - 1)
-        .on("mouseover", highlight)
-        .on("mouseout", dehighlight)
-        .on("mousemove", moveLabel);
+        .on("mouseover", highlight) // the mouseover/out/move functions are applied just like the enumeration units.
+        .on("mouseout", dehighlight) //the bars will be highlighted and dehighlighted.
+        .on("mousemove", moveLabel); // infoLabel html element will adjust position based on mouse and screen real estate.
     
+    // the desc will also be appeneded in the bars so the dehighlight function can call this desc tag in to bring back the original style.
     var desc = bars.append("desc")
         .text('{"stroke": "none", "stroke-width": "0px"}');
     
-
+    // create Yaxis, the yscale is brought in which contains the yDomain 
     var yAxis = d3.axisLeft()
         .scale(yScale)
         
@@ -255,13 +273,13 @@ function setChart(csvData, colorScale){
     var chartTitle = chart.append("text")
         .attr("x", 280)
         .attr("y", 30)
-        .attr("class", "titleText")
-        .text("Chicago Demographic Data: " + expressed);
+        .attr("class", "titleText") // .titleText is for css
+        .text("Chicago Demographic Data: " + expressed); // expressed is the attribute name.
         
 
     //place axis
     var axis = chart.append("g")
-        .attr("class", "axis")
+        .attr("class", "axis") //.axis is for css
         .attr("transform", translate)
         .call(yAxis);
 
@@ -272,6 +290,7 @@ function setChart(csvData, colorScale){
         .attr("height", chartInnerHeight)
         .attr("transform", translate);
     
+    //update chart is used to adjust the colors, bar sizing, and the axis based on the selected attribute.
     updateChart(bars, csvData.length, colorScale, chart, axis);
 
 };
@@ -279,20 +298,20 @@ function createDropdown(csvData){
     //add select element
     var dropdown = d3.select("body")
         .append("select")
-        .attr("class", "dropdown")
+        .attr("class", "dropdown")//.dropwdown is for css, this will also determine the placement on the screen
         .on("change", function(){
-            changeAttribute(this.value, csvData)
+            changeAttribute(this.value, csvData)// when attribute is changed, the changeAttribute function is called to update.
         });
 
     //add initial option
     var titleOption = dropdown.append("option")
-        .attr("class", "titleOption")
+        .attr("class", "titleOption") //.titleOption for css
         .attr("disabled", "true")
-        .text("Select Demographic");
+        .text("Select Demographic"); // initial text when opening the page
 
     //add attribute name options
     var attrOptions = dropdown.selectAll("attrOptions")
-        .data(attrArray)
+        .data(attrArray) //the list of data inside the dropdown menu
         .enter()
         .append("option")
         .attr("value", function(d){ return d })
@@ -305,9 +324,10 @@ function changeAttribute(attribute, csvData){
     //recreate the color scale
     var colorScale = makeColorScale(csvData);
 
+    // chicago neighborhood boundaries are going to be updated
     var chi = d3.selectAll(".community")
-        .transition()
-        .duration(750)
+        .transition() //transition is the "animation" for changing the data display
+        .duration(750) //duration of transition (750 is 0.75 seconds)
         .style("fill", function(d){
             //use value variable from the expressed value
             var value = d.properties[expressed];
@@ -315,7 +335,7 @@ function changeAttribute(attribute, csvData){
                 //colors are used from the expressed global variable
                 return colorScale(value);
             } else{
-                return "#ccc"
+                return "#ccc" //if there are values without any values, #ccc is the default color value
             }
         });
 
@@ -323,28 +343,32 @@ function changeAttribute(attribute, csvData){
     var bars = d3.selectAll(".bar")
         //re-sort bars
         .sort(function(a, b){
+            //sorts out form highest to lowest for the bar chart
             return b[expressed] - a[expressed];
         })
-        .transition()
-        .delay(function(d, i){
+        .transition() // changes the data through transition
+        .delay(function(d, i){ //delay is to have the chart transition with a slight delay
             return i * 10
         })
         .duration(500)
-
+    
+    //updateChart is also called, as this will update the colorScale and bars on the chart/map.
     updateChart(bars, csvData.length, colorScale, csvData);
 };
 function updateChart(bars, n, colorScale){
+    //similar to setChart, the updateChart follows the same procedure for yDomain
     var yDomain;
-    var yTick;
+    var yTick; // since the first default attribute is in percent, the updateChart will update the tickformat on the Y axis.
     var incomeDomain = 120000;
     var percentDomain = 100;
     if(expressed == "Median Household Income"){
         yDomain = incomeDomain
-        yTick = (d => "$" + d3.format(",.0f")(d))
+        yTick = (d => "$" + d3.format(",.0f")(d))//tick format will be in dollar sign if Median Household Income is selected.
     } else {
         yDomain = percentDomain
-        yTick = (d => d + "%")
+        yTick = (d => d + "%") // the tick format will be in percent if it Median Household Income is not selected. 
     };
+    //yDomain is entered to determine yScale.
     var yScale = d3.scaleLinear()
         .range([380, 0])
         .domain([0, yDomain]);
@@ -357,6 +381,7 @@ function updateChart(bars, n, colorScale){
         .attr("height", function(d, i){
             return 380 - yScale(parseFloat(d[expressed]));
         })
+        //bars adjusted based on the yScale
         .attr("y", function(d, i){
             return yScale(parseFloat(d[expressed])) + topBottomPadding;
         })
@@ -369,58 +394,60 @@ function updateChart(bars, n, colorScale){
                 return "#ccc";
             }
     });
+    //yAxis is created, the .tickFormat is added in order to change the tick syntax.
     var yAxis = d3.axisLeft()
         .tickFormat(yTick)
         .scale(yScale)
 
     var axis = d3.select(".axis")
-        .transition()
+        .transition()//changing the axis with design.
         .duration(750)
         .call(yAxis)
     
     var chartTitle = d3.select(".titleText")
+    // chart title is updated based on selected attribute. 
         .text("Chicago Demographic Data: " + expressed);
 };
 function highlight(props){
     //change stroke
-    var selected = d3.selectAll("." + props.Neighborhood )
-        .style("stroke", "#c51b8a")
+    var selected = d3.selectAll("." + props.Neighborhood )//if the mouse is hovered over an element with .Neighborhood name, the charts and map will highlight that unit.
+        .style("stroke", "#c51b8a") //color and stroke width
         .style("stroke-width", "3");
-    // var plotSelected = d3.selectAll(csvData.Neighborhood )
-    //     .style("stroke", "#c51b8a")
-    //     .style("stroke-width", "3");
-    setLabel(props)
+    setLabel(props)//html element will popup if hovered over a unit.
 };
 function dehighlight(props){
-    var selected = d3.selectAll("." + props.Neighborhood)
+    var selected = d3.selectAll("." + props.Neighborhood) //same condition as highlight, but if the mouse is not hovered over.
         .style("stroke", function(){
-            return getStyle(this, "stroke")
+            return getStyle(this, "stroke") //getStyle is a function inside this function to restore original styles.
         })
         .style("stroke-width", function(){
             return getStyle(this, "stroke-width")
         });
     function getStyle(element, styleName){
         var styleText = d3.select(element)
-            .select("desc")
+            .select("desc") //the desc finds the same as the element to go back to original style.
             .text();
 
         var styleObject = JSON.parse(styleText);
 
         return styleObject[styleName];
     };
-    d3.select(".infolabel")
+    d3.select(".infolabel") //remove the htlm tag.
         .remove();
 };
 function setLabel(props){
     //label content
     var labelAttribute
 
+    //percent is the label for attributes with percentages
     var percent = "<h1>" + props[expressed]+"%" +
         "</h1>"+expressed;
 
+    //income is the label for the Median Household Income percentages
     var income = "<h1>" + "$"+ d3.format(",")(props[expressed]) +
     "</h1>"+expressed;
 
+    //IF statement, if the map/chart is showing a certain attribute, then the labelAttribute will be as follows.
     if(expressed == 'Median Household Income'){
         labelAttribute = income
     } else {
@@ -430,104 +457,111 @@ function setLabel(props){
     //create info label div
     var infolabel = d3.select("body")
         .append("div")
-        .attr("class", "infolabel")
-        .attr("id", props.Label + "_label")
-        .html(labelAttribute);
+        .attr("class", "infolabel")//.inforlabel for css
+        .attr("id", props.Label + "_label") //this attribute is based on the selected attribute.
+        .html(labelAttribute); //.html calls up the html tag
 
-    var regionName = infolabel.append("div")
-        .attr("class", "labelname")
-        .html(props.Label);
+    var regionName = infolabel.append("div") //calls the region name
+        .attr("class", "labelname")//.labelname for css
+        .html(props.Label);// .html calls up the html tag to 
 };
 function moveLabel(){
-    //get width of label
+    //get width of labels
     var labelWidth = d3.select(".infolabel")
         .node()
-        .getBoundingClientRect()
+        .getBoundingClientRect()//studies screen real estate.
         .width;
 
     //use coordinates of mousemove event to set label coordinates
-    var x1 = d3.event.clientX + 10,
+    var x1 = d3.event.clientX + 10, //determines the html placement depending where the mouse moves.
         y1 = d3.event.clientY - 75,
         x2 = d3.event.clientX - labelWidth - 10,
         y2 = d3.event.clientY + 25;
 
-    //horizontal label coordinate, testing for overflow
+    //x for the horizontal, avoids overlap
     var x = d3.event.clientX > window.innerWidth - labelWidth - 20 ? x2 : x1; 
-    //vertical label coordinate, testing for overflow
+    //y for the horizontal, avoids overlap
     var y = d3.event.clientY < 75 ? y2 : y1; 
 
-    d3.select(".infolabel")
+    d3.select(".infolabel") //the infolabel html will now adjust based on mouse location
         .style("left", x + "px")
         .style("top", y + "px");
 };
 function setParallelPlot(csvData){
+    //dimensions of the Parallel Coordinate Plot
     var margin = {top: 50, right: 80, bottom: 10, left: 80};
     width = chartWidth - margin.left - margin.right;
     height = 360 - margin.top - margin.bottom;
 
+    //add the plot below the bar chart
     var plot = d3.select("body")
     .append("svg")
     .attr("width", chartWidth)
-    .attr("height", 375)
-    .attr("class", "plot")
+    .attr("height", 375) 
+    .attr("class", "plot")// .plot for css
     .append("g")
     .attr("transform",
         "translate(" + margin.left + "," + margin.top + ")");
 
-       var keep = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Below Poverty",
+    //keep is a list of the csv header names. The Unique ID and label columns will not be kept. These are the attributes that are visualized in the plot.
+    var keep = ["No High School Diploma","High School Diploma","Some College","Bachelors Degree or Higher","Below Poverty",
         "Have Health Insurance", "Median Household Income"]
 
-        dimensions = d3.keys(csvData[0]).filter(function(csvData) { return keep.indexOf(csvData) >= 0 })
+    //dimensions variable filters the csvData based on the keep variable. 
+    dimensions = d3.keys(csvData[0]).filter(function(csvData) { return keep.indexOf(csvData) >= 0 })
         
-        var yDomain;
-        var incomeDomain = 120000;
-        var percentDomain = 100;
-        var y = {}
-        for (i in dimensions) {
-          name = dimensions[i]
-          if(name == 'Median Household Income'){
-            yDomain = (incomeDomain)
-            } else {
-            yDomain = percentDomain
+    //yDomain is used in the same process as the bar chart
+    var yDomain;
+    var incomeDomain = 120000;
+    var percentDomain = 100;
+    var y = {}
+    for (i in dimensions) {
+        name = dimensions[i]
+        if(name == 'Median Household Income'){
+        yDomain = (incomeDomain)
+        } else {
+        yDomain = percentDomain
         }
-          y[name] = d3.scaleLinear()
+        y[name] = d3.scaleLinear()
             .domain( [0, yDomain] ) // --> Same axis range for each group
             .range([300, 0])
-        }
-         // Build the X scale -> it find the best position for each Y axis
-        x = d3.scalePoint()
+    };
+    //create the x scale
+    x = d3.scalePoint()
         .range([0, width])
-        .domain(dimensions);
+        .domain(dimensions);//dimensions determines how the domain for the x scale is plotted. 
     
-        function path(csvData) {
-            return d3.line()(dimensions.map(function(p) { return [x(p), y[p](csvData[p])]; }));
+    // path is a function that goes into the csv data and "connects" the values with eachother based on the input dimensions. 
+    function path(csvData) {
+        return d3.line()(dimensions.map(function(p) { return [x(p), y[p](csvData[p])]; }));
         }
-        plot
-        .selectAll("body")
-        .data(csvData)
+    //plot the lines
+    plot.selectAll("body")
+        .data(csvData)//uses csvData
         .enter()
-        .append("path")
-        .attr("d",  path)
+        .append("path")//adds the lines
+        .attr("d",  path)// path function is called
         .attr("class", function(d){
-            return "path " + d.Neighborhood;
+            return "path " + d.Neighborhood; //name each path as the neighborhood. This is the same approach for the other chart/map for the highlighting.
                 })
-        .style("opacity","1")
+        .style("opacity","1")//line color and style
         .style("fill", "none")
         .style("stroke", "#b3b3b3")
         .style("stroke-width", "0.5px")
-        .append("desc")
-          .text('{"stroke": "#b3b3b3", "stroke-width": "0.5px"}');
+        .append("desc")//bring in the desc for dehighlight function to work.
+        .text('{"stroke": "#b3b3b3", "stroke-width": "0.5px"}');
 
-      // Draw the axis:
-      plot.selectAll("body")
-        // For each dimension of the dataset I add a 'g' element:
+    //plot the axis:
+    plot.selectAll("body")
+        //dimensions are the y axis
         .data(dimensions).enter()
         .append("g")
-        .attr("class", "plotAxis")
-        // I translate this element to its right position on the x axis
+        .attr("class", "plotAxis")//.plotAxis for css
         .attr("transform", function(d) { return "translate(" + x(d) + ")"; })
-        // And I build the axis with the call function
-        .each(function(d) { if(d == 'Median Household Income'){
+        // labeling the ticks on each y Axis
+        //if the axis is Median Household Income, the tick format on the axis will be in $
+        //if the axis is not Median Household Income, the tick format on the axis will be in %
+        .each(function(d) { if(d == 'Median Household Income'){ 
             d3.select(this)
             .call(d3.axisLeft()
             .tickFormat(d => "$" + d3.format(",.0f")(d))
@@ -538,19 +572,19 @@ function setParallelPlot(csvData){
             .tickFormat(d => d + "%")
             .ticks(10)
             .scale(y[d])); }})
-        // Add axis title
+        //bring in title for each axis
         .append("text")
-        
         .attr("class","plotTitles")
-        .call(wrap, 50)
-          .style("text-anchor", "middle")
-          .attr("y", -30)
-          .attr("x", -10)
-          .text(function(d) { return d; })
-          .style("padding", "5px")
-          .style("fill", "Black")
-          .call(wrap, 100)
+        .style("text-anchor", "middle") //title is centered over the y axis
+        .attr("y", -30)
+        .attr("x", -10)
+        .text(function(d) { return d; })//text is based on dimensions variable
+        .style("padding", "5px")
+        .style("fill", "Black")
+        .call(wrap, 100)// wrap function is called to wrap text, this was created by Mike Bostock from D3
+        // 100 is the max width for text. 
 };
+// wrap function created by Mike Bostock.
 function wrap(text, width) {
     text.each(function() {
       var text = d3.select(this),
@@ -558,9 +592,9 @@ function wrap(text, width) {
           word,
           line = [],
           lineNumber = 0,
-          lineHeight = 1.1, // ems
+          lineHeight = 1.1, 
           y = text.attr("y"),
-          dy = 0
+          dy = 0 //in this plot keep 0, as it is above the chart.
           tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
       while (word = words.pop()) {
         line.push(word);
@@ -575,8 +609,10 @@ function wrap(text, width) {
     });
   }
 function setCredits(){
-    var author = "<p>Data retrieved from <a href = 'https://robparal.com/chicago-data/' target = 'blank'>Rob Paral & Associates</a> and the 2014-2018 American Community Survey from the U.S. Census Bureau</p><br><p>Created by <a href = 'https://kyle-mcnair.github.io' target = 'blank'>Kyle McNair</a></p>";
+    //author is an html element of my name/site and data sources/site
+    var author = "<p>Data retrieved from <a href = 'https://robparal.com/chicago-data/' target = 'blank'>Rob Paral & Associates</a> and the 2014-2018 American Community Survey from the U.S. Census Bureau</p><br><p>Created by <a href = 'https://kyle-mcnair.github.io' target = 'blank'>Kyle McNair</a></p><br><p>Last Updated: April 14, 2020</p>";
     
+    //bring the html text below the map/charts
     var creditsData = d3.select("body")
         .append("div")
         .html(author)
