@@ -12,13 +12,14 @@ var expressed = attrArray[0]; //initial attribute
 
 //chart frame dimensions
 var chartWidth = window.innerWidth * 0.55,
-chartHeight = 400
+margin = {top: 30, right: 60, bottom: 10, left: 60};
+chartHeight = 340
 leftPadding = 55,
 rightPadding = 10,
-topBottomPadding = 10,
+topBottomPadding = 20,
 chartInnerWidth = chartWidth - leftPadding - rightPadding,
-chartInnerHeight = chartHeight - topBottomPadding * 2,
-translate = "translate(" + leftPadding + "," + topBottomPadding + ")";
+chartInnerHeight = chartHeight - margin.top - margin.bottom * 1,
+translate = "translate(" + leftPadding + "," + margin.top+")";
 
 //begin script when window loads
 window.onload = setMap();
@@ -29,7 +30,7 @@ function setMap(){
     
     //map frame dimensions
     var width = window.innerWidth*0.4,
-        height = 800;
+        height = 660;
 
     //create new svg container for the map
     var map = d3.select("body")
@@ -41,10 +42,10 @@ function setMap(){
 
     //create Albers equal area conic projection centered on Chicago
     var projection = d3.geoAlbers()
-        .center([-0.05, 41.83])
+        .center([-0.05, 41.85])
         .rotate([87.65, 0, 0])
         .parallels([40, 45])
-        .scale(97000.00)//extra zoom since this is a large scale map
+        .scale(88000.00)//extra zoom since this is a large scale map
         .translate([width / 2, height / 2]);
     //call in the projection
     var path = d3.geoPath()
@@ -271,8 +272,8 @@ function setChart(csvData, colorScale){
         
     //create a text element for the chart title
     var chartTitle = chart.append("text")
-        .attr("x", 280)
-        .attr("y", 30)
+        .attr("x", 250)
+        .attr("y", 20)
         .attr("class", "titleText") // .titleText is for css
         .text("Chicago Demographic Data: " + expressed); // expressed is the attribute name.
         
@@ -370,7 +371,7 @@ function updateChart(bars, n, colorScale){
     };
     //yDomain is entered to determine yScale.
     var yScale = d3.scaleLinear()
-        .range([380, 0])
+        .range([300, 0])
         .domain([0, yDomain]);
 
     //position bars
@@ -379,11 +380,11 @@ function updateChart(bars, n, colorScale){
         })
         //size/resize bars
         .attr("height", function(d, i){
-            return 380 - yScale(parseFloat(d[expressed]));
+            return 300 - yScale(parseFloat(d[expressed]));
         })
         //bars adjusted based on the yScale
         .attr("y", function(d, i){
-            return yScale(parseFloat(d[expressed])) + topBottomPadding;
+            return yScale(parseFloat(d[expressed])) + margin.top;
         })
         //color/recolor bars
         .style("fill", function(d){
@@ -474,7 +475,7 @@ function moveLabel(){
 
     //use coordinates of mousemove event to set label coordinates
     var x1 = d3.event.clientX + 10, //determines the html placement depending where the mouse moves.
-        y1 = d3.event.clientY - 75,
+        y1 = d3.event.clientY - 70,
         x2 = d3.event.clientX - labelWidth - 10,
         y2 = d3.event.clientY + 25;
 
@@ -489,15 +490,15 @@ function moveLabel(){
 };
 function setParallelPlot(csvData){
     //dimensions of the Parallel Coordinate Plot
-    var margin = {top: 50, right: 80, bottom: 10, left: 80};
+    var margin = {top: 50, right: 60, bottom: 10, left: 60};
     width = chartWidth - margin.left - margin.right;
-    height = 360 - margin.top - margin.bottom;
+    height = 300 - margin.top - margin.bottom;
 
     //add the plot below the bar chart
     var plot = d3.select("body")
     .append("svg")
     .attr("width", chartWidth)
-    .attr("height", 375) 
+    .attr("height", 305) 
     .attr("class", "plot")// .plot for css
     .append("g")
     .attr("transform",
@@ -524,7 +525,7 @@ function setParallelPlot(csvData){
         }
         y[name] = d3.scaleLinear()
             .domain( [0, yDomain] ) // --> Same axis range for each group
-            .range([300, 0])
+            .range([240, 0])
     };
     //create the x scale
     x = d3.scalePoint()
@@ -579,7 +580,7 @@ function setParallelPlot(csvData){
         .attr("y", -30)
         .attr("x", -10)
         .text(function(d) { return d; })//text is based on dimensions variable
-        .style("padding", "5px")
+        .style("padding", "1px")
         .style("fill", "Black")
         .call(wrap, 100)// wrap function is called to wrap text, this was created by Mike Bostock from D3
         // 100 is the max width for text. 
