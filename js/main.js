@@ -611,7 +611,7 @@ function wrap(text, width) {
   }
 function setCredits(){
     //author is an html element of my name/site and data sources/site
-    var author = "<p>Data retrieved from <a href = 'https://robparal.com/chicago-data/' target = 'blank'>Rob Paral & Associates</a> and the 2014-2018 American Community Survey from the U.S. Census Bureau</p><br><p>Created by <a href = 'https://kyle-mcnair.github.io' target = 'blank'>Kyle McNair</a></p><br><p>Last Updated: April 14, 2020</p>";
+    var author = "<p>Data retrieved from <a href = 'https://robparal.com/chicago-data/' target = 'blank'>Rob Paral & Associates</a> and the 2014-2018 American Community Survey from the U.S. Census Bureau</p><br><p>Created by <a href = 'https://kyle-mcnair.github.io' target = 'blank'>Kyle McNair</a></p><br><p>Last Updated: April 21, 2020</p>";
     
     //bring the html text below the map/charts
     var creditsData = d3.select("body")
