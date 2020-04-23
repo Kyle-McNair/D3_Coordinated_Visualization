@@ -43,7 +43,7 @@ function setMap(){
     //create Albers equal area conic projection centered on Chicago
     var projection = d3.geoAlbers()
         .center([-0.05, 41.85])
-        .rotate([87.67, 0, 0])
+        .rotate([87.69, 0, 0])
         .parallels([40, 45])
         .scale(88000.00)//extra zoom since this is a large scale map
         .translate([width / 2, height / 2]);
